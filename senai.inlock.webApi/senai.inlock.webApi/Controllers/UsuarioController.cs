@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using senai.inlock.webApi.Domains;
 using senai.inlock.webApi.Interfaces;
 using senai.inlock.webApi.Repositories;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace senai.inlock.webApi.Controllers
@@ -27,6 +31,7 @@ namespace senai.inlock.webApi.Controllers
             return Ok(_usuarioRepository.ListarTodos());
         }
 
+        [Authorize(Roles = "1")]
         [HttpPost]
         public IActionResult Post(UsuariosDomain novoUsuario)
         {
@@ -44,6 +49,47 @@ namespace senai.inlock.webApi.Controllers
             return Created("http://localhost:5000/api/Jogo", novoUsuario);
         }
 
+        [Authorize]
+        [HttpPost("Login")]
+        public IActionResult Login(UsuariosDomain login)
+        {
+            UsuariosDomain usuarioBuscado = _usuarioRepository.BuscarPorEmailSenha(login.email, login.senha);
+
+            if (usuarioBuscado == null)
+            {
+                return NotFound("E-mail ou senha inválidos!");
+            }
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Email, usuarioBuscado.email),
+                new Claim(JwtRegisteredClaimNames.Jti, usuarioBuscado.idUsuario.ToString()),
+                new Claim(ClaimTypes.Role, usuarioBuscado.idTipoUsuario.ToString()),
+            };
+
+            // Define a chave de acesso ao token
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes("games-chave-autenticacao"));
+
+            // Define as credenciais do token - Header
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            // Gerar o token
+            var token = new JwtSecurityToken(
+                issuer: "InLock.webApi",                
+                audience: "InLock.webApi",             
+                claims: claims,                         
+                expires: DateTime.Now.AddHours(2),   
+                signingCredentials: creds               
+            );
+
+            return Ok(new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token)
+            });
+        }
+
+
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -57,6 +103,7 @@ namespace senai.inlock.webApi.Controllers
             return NotFound("Nenhum usuario encontrado para o identificador informado");
         }
 
+        [Authorize(Roles = "1")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, UsuariosDomain UsuarioAtualizado)
         {
@@ -70,6 +117,7 @@ namespace senai.inlock.webApi.Controllers
             return NotFound("Nenhum usuario encontrado para o identificador informado");
         }
 
+        [Authorize(Roles = "1")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using senai.inlock.webApi.Domains;
 using senai.inlock.webApi.Interfaces;
 using senai.inlock.webApi.Repositories;
@@ -21,12 +22,14 @@ namespace senai.inlock.webApi.Controllers
             _estudiosRepository = new EstudioRepository();
         }
 
+        [Authorize]
         [HttpGet]
         public IActionResult Get()
         {
             return Ok(_estudiosRepository.ListarTodos());
         }
 
+        [Authorize(Roles = "1")]
         [HttpPost]
         public IActionResult Post(EstudiosDomain novoEstudio)
         {
@@ -39,6 +42,7 @@ namespace senai.inlock.webApi.Controllers
             return Created("http://localhost:44696/api/Estudios", novoEstudio);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -52,6 +56,7 @@ namespace senai.inlock.webApi.Controllers
             return NotFound("Nenhum estudio encontrado para o identificador informado");
         }
 
+        [Authorize(Roles = "1")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, EstudiosDomain EstudioAtualizado)
         {
@@ -65,6 +70,7 @@ namespace senai.inlock.webApi.Controllers
             return NotFound("Nenhum estudio encontrado para o identificador informado");
         }
 
+        [Authorize(Roles = "1")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

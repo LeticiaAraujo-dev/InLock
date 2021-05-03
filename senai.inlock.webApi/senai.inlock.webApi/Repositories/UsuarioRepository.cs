@@ -36,13 +36,15 @@ namespace senai.inlock.webApi.Repositories
             using (SqlConnection con = new SqlConnection(stringConexao))
             {
 
-                string queryUpdateIdUrl = "UPDATE usuarios SET email = @Nome WHERE idUsuario = @ID";
+                string queryUpdateIdUrl = "UPDATE usuarios SET email = @Nome, senha = @Senha WHERE idUsuario = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(queryUpdateIdUrl, con))
                 {
 
                     cmd.Parameters.AddWithValue("@ID", id);
                     cmd.Parameters.AddWithValue("@Nome", usuario.email);
+                    cmd.Parameters.AddWithValue("@Senha", usuario.senha);
+
 
                     con.Open();
 
@@ -91,7 +93,7 @@ namespace senai.inlock.webApi.Repositories
         {
             using (SqlConnection con = new SqlConnection(stringConexao))
             {
-                string querySelectById = "SELECT email, titulo FROM usuarios U LEFT JOIN tiposDeUsuario TU ON U.idTipoUsuario = TU.idTipoUsuario WHERE idUsuario = @ID";
+                string querySelectById = "SELECT email, senha FROM usuarios WHERE idUsuario = @ID";
 
                 con.Open();
 
@@ -108,9 +110,9 @@ namespace senai.inlock.webApi.Repositories
                         UsuariosDomain usuarioBuscado = new UsuariosDomain()
                         {
 
-                            idUsuario = Convert.ToInt32(rdr["idUsuario"]),
+                            email = rdr["email"].ToString(),
+                            senha = rdr["senha"].ToString()
 
-                            email = rdr["email"].ToString()
                         };
 
                         return usuarioBuscado;
@@ -125,7 +127,7 @@ namespace senai.inlock.webApi.Repositories
         {
             using (SqlConnection con = new SqlConnection(stringConexao))
             {
-                string queryInsert = "INSERT INTO usuarios(email, senha) VALUES ('" + usuarioNovo.email + "" + usuarioNovo.senha + "')";
+                string queryInsert = "INSERT INTO usuarios(email, senha, idTipoUsuario) VALUES ('" + usuarioNovo.email + "','" + usuarioNovo.senha + "','"+usuarioNovo.idTipoUsuario+"')";
                 using (SqlCommand cmd = new SqlCommand(queryInsert, con))
                 {
                     con.Open();
